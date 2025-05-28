@@ -1,0 +1,632 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e2e4eaa0-08e8-4013-8614-ed3f62ad8288",
+      "name": "Read Excel2",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08PE98HAP5",
+          "mode": "list",
+          "cachedResultName": "automation"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "id": "ef57f598-008b-427d-8f54-9fe54da47d20",
+      "name": "Post to Slack6",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -20
+      ],
+      "webhookId": "ac19a5ae-e7a5-427d-b1a2-4e778b3e8d60"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C08PE98HAP5",
+          "mode": "list",
+          "cachedResultName": "automation"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -20
+      ],
+      "id": "4c0c55d1-d26f-49e2-ac8d-5076b5d09b9e",
+      "name": "Slack Trigger4",
+      "webhookId": "97a871fd-f036-4637-82e9-8e27a177929f"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.files[0].url_private }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer xoxb-8539869902500-8816667586945-qnx5LDkgvvp8hAHcjGkRCn5i"
+            },
+            {
+              "name": "Accept",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        -20
+      ],
+      "id": "232d92b2-cfec-49a1-bb7b-6fd133dfdb42",
+      "name": "HTTP Request3",
+      "notesInFlow": false,
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseHoursMinutes(timeStr) {\n  const regex = /(?:(\\d{1,2})h)?(?:\\s?(\\d{1,2})m)?/;\n  const match = timeStr.trim().match(regex);\n  if (match) {\n    const hours = match[1] ? parseInt(match[1]) : 0;\n    const minutes = match[2] ? parseInt(match[2]) : 0;\n    return hours + minutes / 60;\n  }\n  return 0;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n  let absentDays = 0;\n  let holidays = 0;\n  let presentDays = 0;\n  let halfDays = 0;\n\n  for (const [key, value] of Object.entries(data)) {\n    if (key === \"Employee / Date\") continue;\n\n    if (value === \"Absent\") {\n      absentDays += 1;\n    } else if (\n      value === \"Holiday ( Saturday)\" ||\n      value === \"Holiday ( Sunday)\"\n    ) {\n      holidays += 1;\n    } else if (typeof value === \"string\" && /\\d+h(\\s?\\d+m)?/.test(value)) {\n      const totalHours = parseHoursMinutes(value);\n      if (totalHours < 6) {\n        halfDays += 1;\n      } else {\n        presentDays += 1;\n      }\n    }\n  }\n\n  const summary = {\n    \"Employee / Date\": data[\"Employee / Date\"],\n    presentDays,\n    halfDays,\n    absentDays\n    \n  };\n\n  results.push({ json: summary });\n}\n\nreturn results;\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -20
+      ],
+      "id": "e04b2792-1156-47da-ba00-25055f30048e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1247281966,
+          "mode": "list",
+          "cachedResultName": "n8n-sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8/edit#gid=1247281966"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Employee / Date",
+              "displayName": "Employee / Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "presentDays",
+              "displayName": "presentDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "halfDays",
+              "displayName": "halfDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "absentDays",
+              "displayName": "absentDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        -20
+      ],
+      "id": "c7979d64-1f44-4111-a77b-d430c74bd5ef",
+      "name": "Google Sheets"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items.map(item => {\n  const d = item.json;\n  return ` ${d[\"Employee / Date\"]} | ✅ Present: ${d[\"presentDays\"]} | 🌓 Half: ${d[\"halfDays\"]} | ❌ Absent: ${d[\"absentDays\"]}`;\n});\n\nreturn [{ json: { text: rows.join('\\n') } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -20
+      ],
+      "id": "1840cae0-fe68-41e3-9aa6-e4ff1a729520",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ad2b1e81-9e18-4b7c-b2aa-364eef29d22b",
+      "name": "Read Excel3",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        140,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08PE98HAP5",
+          "mode": "list",
+          "cachedResultName": "automation"
+        },
+        "text": "={{ $json['0'] }}  {{ $json['1'] }}  {{ $json['2'] }}",
+        "otherOptions": {}
+      },
+      "id": "fba4a10a-0bd5-4008-9ea3-ae6f537eb59e",
+      "name": "Post to Slack7",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        420
+      ],
+      "webhookId": "ac19a5ae-e7a5-427d-b1a2-4e778b3e8d60"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C08PE98HAP5",
+          "mode": "list",
+          "cachedResultName": "automation"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        320
+      ],
+      "id": "d3d52e6a-238e-4180-be30-4144c968ef25",
+      "name": "Slack Trigger5",
+      "webhookId": "97a871fd-f036-4637-82e9-8e27a177929f"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.files[0].url_private_download }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer xoxb-8539869902500-8816667586945-qnx5LDkgvvp8hAHcjGkRCn5i"
+            },
+            {
+              "name": "Accept",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        320
+      ],
+      "id": "c92a78ba-8929-40bb-8e90-b123de80f77a",
+      "name": "HTTP Request4",
+      "notesInFlow": false,
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseHoursMinutes(timeStr) {\n  const regex = /(?:(\\d{1,2})h)?(?:\\s?(\\d{1,2})m)?/;\n  const match = timeStr.trim().match(regex);\n  if (match) {\n    const hours = match[1] ? parseInt(match[1]) : 0;\n    const minutes = match[2] ? parseInt(match[2]) : 0;\n    return hours + minutes / 60;\n  }\n  return 0;\n}\n\nconst results = [];\n\nfor (const item of $input.all()) {\n  const data = item.json;\n\n  // ✅ Skip RD entries\n  if (data[\"Employee / Date\"] === \"RD\") continue;\n\n  let absentDays = 0;\n  let holidays = 0;\n  let presentDays = 0;\n  let halfDays = 0;\n  let totalDates = 0;\n\n  for (const [key, value] of Object.entries(data)) {\n    if (key === \"Employee / Date\" || key === \"Paid Leave / CL\") continue;\n\n    totalDates += 1;\n\n    if (value === \"Absent\") {\n      absentDays += 1;\n    } else if (\n      value === \"Holiday ( Saturday)\" ||\n      value === \"Holiday ( Sunday)\"\n    ) {\n      holidays += 1;\n    } else if (typeof value === \"string\" && /\\d+h(\\s?\\d+m)?/.test(value)) {\n      const totalHours = parseHoursMinutes(value);\n      if (totalHours < 6) {\n        halfDays += 1;\n      } else {\n        presentDays += 1;\n      }\n    }\n  }\n\n  const paidLeaveRaw = data[\"Paid Leave / CL\"];\n  let paidLeave = paidLeaveRaw ? parseFloat(paidLeaveRaw) : 0;\n\n  // ✅ Condition 1: No leave, no half-day → no paid leave\n  if (absentDays === 0 && halfDays === 0) {\n    paidLeave = 0;\n  }\n\n  // ✅ Condition 2: Only 1 half-day and no absent → subtract 0.5 from paid leave\n  if (absentDays === 0 && halfDays === 1) {\n    paidLeave = Math.max(paidLeave - 0.5, 0);\n  }\n\n  const totalWorkingDays = totalDates - holidays;\n  const effectivePresentDays = presentDays + (halfDays * 0.5) + paidLeave;\n  const presentPercentage = totalWorkingDays > 0\n    ? ((effectivePresentDays / totalWorkingDays) * 100).toFixed(2)\n    : \"0.00\";\n\n  const summary = {\n    \"Employee / Date\": data[\"Employee / Date\"],\n    presentDays,\n    halfDays,\n    absentDays,\n    paidLeave,\n    totalWorkingDays,\n    effectivePresentDays: effectivePresentDays.toFixed(2),\n    presentPercentage: `${presentPercentage}%`\n  };\n\n  results.push({ json: summary });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        220
+      ],
+      "id": "28ddee2e-02b4-4726-9607-b54c270bd063",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8",
+          "mode": "list",
+          "cachedResultName": "montly_payslip",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 868669710,
+          "mode": "list",
+          "cachedResultName": "april",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8/edit#gid=868669710"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Employee / Date",
+              "displayName": "Employee / Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "presentDays",
+              "displayName": "presentDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "halfDays",
+              "displayName": "halfDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "absentDays",
+              "displayName": "absentDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paidLeave",
+              "displayName": "paidLeave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "totalWorkingDays",
+              "displayName": "totalWorkingDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "effectivePresentDays",
+              "displayName": "effectivePresentDays",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "presentPercentage",
+              "displayName": "presentPercentage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        600,
+        320
+      ],
+      "id": "8f9c9ac0-025a-4481-8c0f-c0fb28cb7e5e",
+      "name": "Google Sheets1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items.map(item => {\n  const d = item.json;\n  return ` ${d[\"Employee / Date\"]} | ✅ Present: ${d[\"presentDays\"]} | 🌓 Half: ${d[\"halfDays\"]} | ❌ Absent: ${d[\"absentDays\"]}`;\n});\n\nreturn [{ json: { text: rows.join('\\n') } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        420
+      ],
+      "id": "30531a44-fdf1-4bba-9dd9-d7750cebb1c2",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08PE98HAP5",
+          "mode": "list",
+          "cachedResultName": "automation"
+        },
+        "text": "✅ Attendance summary sheet is ready!   📄 [Click here to view the Google Sheet](https://docs.google.com/spreadsheets/d/1zspC5I7DkwKIC17gYpAtQM5usDe-KzHVnprzy9-NdL8/edit#gid=1247281966)",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        820,
+        220
+      ],
+      "id": "4fc95bf1-6210-4f66-be52-b396d1ec7c67",
+      "name": "Slack1",
+      "webhookId": "2fc7a111-a824-43af-96f4-57d9f5859d71"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n\nconst fileName = item.files?.[0]?.name || \"Unknown.xlsx\";\n\n// Regular expression to extract the date parts\nconst match = /From_(\\d{2})-(\\d{2})-(\\d{4})/.exec(fileName);\n\nlet monthName, year;\nif (match) {\n  const month = parseInt(match[2], 10); // Extract month as a number\n  year = parseInt(match[3], 10);\n\n  // Array of month names\n  const monthNames = [\n    \"January\", \"February\", \"March\", \"April\", \"May\", \"June\",\n    \"July\", \"August\", \"September\", \"October\", \"November\", \"December\"\n  ];\n\n  monthName = monthNames[month - 1]; // Get month name\n} else {\n  monthName = year = null; // Handle case where date is not found\n}\n\nreturn [\n  {\n    json: {\n      result: monthName && year ? `${monthName}-${year}` : \"Unknown\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        420
+      ],
+      "id": "56cc3581-c248-4fd6-a88f-75966d0eed25",
+      "name": "Code4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Read Excel2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Read Excel2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Post to Slack6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel3": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Read Excel3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Slack1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Post to Slack7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0860e87c-b617-4f8e-a102-182bfc399de9",
+  "meta": {
+    "instanceId": "d15dff6fdd5807d150bc0a40d579690a24e3598ce8ab982b74ce08fdcbdbc218"
+  },
+  "id": "FeD2LjgEBHyz24qM",
+  "tags": []
+}
